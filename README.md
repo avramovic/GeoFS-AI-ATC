@@ -11,9 +11,8 @@ it aloud using web text to speech API (also supported by all major browsers).
 - speak to the atc and hear it respond (speech recognition and text-to-speech), or type the message if you can't speak
 (if someone is sleeping 🤣 for example)
 - you have to be within 100 km of the airport to talk to it
-- you will always talk to the nearest airport, so this can be tricky when there are two airports really close by
-(like Belgrade Nikola Tesla airport and Batajnica air base)
-- on screen notification will be shown when you switch to another airport
+- click on the radio icon to tune in to different airport; you can tune to a particular airport ATC by using their ICAO code
+- on screen notification will be shown when you are in range of another airport
 - every day there is a new controller working at each airport
 - you can talk to ATC about flight or about whatever (especially when on ground)
 
