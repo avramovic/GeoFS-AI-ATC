@@ -187,7 +187,7 @@
     }
 
     function groundAltitude() {
-        return seaAltitude() - unsafeWindow.geofs.animation.values.groundElevationFeet - 50;
+        return Math.max(seaAltitude() - unsafeWindow.geofs.animation.values.groundElevationFeet - 50, 0);
     }
 
     let oldNearest = null;
