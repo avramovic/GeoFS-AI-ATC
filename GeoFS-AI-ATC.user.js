@@ -360,9 +360,13 @@
             movingSpeed = 'flying at '+unsafeWindow.geofs.animation.values.kias+'kts, heading '+unsafeWindow.geofs.animation.values.heading360;
         }
 
+        let relativeWindDirection = unsafeWindow.geofs.animation.values.relativeWind;
+        let windDirection = unsafeWindow.geofs.animation.values.heading360 + relativeWindDirection;
+        let wind = unsafeWindow.geofs.animation.values.windLabel + ', direction '+ windDirection + ' degrees (or '+relativeWindDirection+' degrees relative to the heading of the aircraft).';
+
         let currentUpdate = 'The pilot is flying '+airplane.name+' and their position is (lat: '+aircraftPosition.lat+',lon: '+aircraftPosition.lon+'), '+onGround+' '+distance+'. Based on the airport and ' +
-            'the aircraft coordinates you can figure out the angle (their relative position to the airport). The altitude of the aircraft is '+seaAltitude()+' feet above the sea level ('+groundAltitude()+' feet above ground) ' +
-            'The plane is '+movingSpeed;
+            'the aircraft coordinates you can figure out the angle (their relative position to the airport). The altitude of the aircraft is '+seaAltitude()+' feet above the sea level ('+groundAltitude()+' feet above ground). ' +
+            'The plane is '+movingSpeed+'. Wind speed is '+wind;
 
         context[airport.code].push({content: currentUpdate, role: 'system'});
         context[airport.code].push({content: pilotMsg, role: 'user'});
