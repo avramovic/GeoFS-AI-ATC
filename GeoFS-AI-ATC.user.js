@@ -322,9 +322,9 @@
             let intro = 'You are '+controller.name.first+' '+controller.name.last+', a '+controller.dob.age+' years old '+controller.gender+' ATC controller on the '+apName+' for today. ' +
                 'Your airport location is (lat: '+airportPosition.lat+', lon: '+airportPosition.lon+'). You are talking to pilot whose name is '+pilot.name+' callsign ('+pilot.callsign+') and they\'ve been piloting since '+pilot.licensed_at+'. ' +
                 'You will be acting as ground, tower, approach or departure, depending on whether the plane is on the ground, their distance from the airport and previous context. ' +
-                'If the aircraft is in the air, keep your communication short and concise, as real ATC. If they\'re on the ground, your sentences should still be short (1-2 sentence per reply), but you can ' +
+                'If the aircraft is in the air, keep your communication short and concise, as real ATC. If they\'re on the ground, your replies should still be short (1-2 sentence per reply), but you can ' +
                 'use a more relaxed communication like making jokes, discussing weather, other traffic etc. If asked why so slow on replies, say you\'re busy, like the real ATC. '+
-                'You should address them by their aircraft type/model and callsign, rarely by their name.' +
+                'You should address them by their aircraft type/model and callsign, rarely by their name. ' +
                 'Today is '+today+', time is '+time+', a beautiful '+season+' '+daynight;
 
             context[airport.code] = [];
@@ -352,20 +352,20 @@
         let movingSpeed;
         if (isOnGround()) {
             if (unsafeWindow.geofs.animation.values.kias > 1) {
-                movingSpeed = 'moving at '+unsafeWindow.geofs.animation.values.kias+ 'kts'
+                movingSpeed = 'moving at '+unsafeWindow.geofs.animation.values.kias+' kts'
             } else {
                 movingSpeed = 'stationary';
             }
         } else {
-            movingSpeed = 'flying at '+unsafeWindow.geofs.animation.values.kias+'kts, heading '+unsafeWindow.geofs.animation.values.heading360;
+            movingSpeed = 'flying at '+unsafeWindow.geofs.animation.values.kias+' kts, heading '+unsafeWindow.geofs.animation.values.heading360;
         }
 
         let relativeWindDirection = unsafeWindow.geofs.animation.values.relativeWind;
         let windDirection = unsafeWindow.geofs.animation.values.heading360 + relativeWindDirection;
         let wind = unsafeWindow.geofs.animation.values.windSpeedLabel + ', direction '+ windDirection + ' degrees (or '+relativeWindDirection+' degrees relative to the heading of the aircraft).';
 
-        let currentUpdate = 'The pilot is flying '+airplane.name+' and their position is (lat: '+aircraftPosition.lat+',lon: '+aircraftPosition.lon+'), '+onGround+' '+distance+'. Based on the airport and ' +
-            'the aircraft coordinates you can figure out the angle (their relative position to the airport). The altitude of the aircraft is '+seaAltitude()+' feet above the sea level ('+groundAltitude()+' feet above ground). ' +
+        let currentUpdate = 'The pilot is flying '+airplane.name+' and their position is (lat: '+aircraftPosition.lat+', lon: '+aircraftPosition.lon+'), '+onGround+' '+distance+'. Based on the airport and ' +
+            'the aircraft coordinates you can figure out their relative position to the airport. The altitude of the aircraft is '+seaAltitude()+' feet above the sea level ('+groundAltitude()+' feet above ground). ' +
             'The plane is '+movingSpeed+'. Wind speed is '+wind+'. Air temperature is '+unsafeWindow.geofs.animation.values.airTemp+' degrees celsius.';
 
         context[airport.code].push({content: currentUpdate, role: 'system'});
