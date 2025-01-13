@@ -366,7 +366,7 @@
 
         let currentUpdate = 'The pilot is flying '+airplane.name+' and their position is (lat: '+aircraftPosition.lat+',lon: '+aircraftPosition.lon+'), '+onGround+' '+distance+'. Based on the airport and ' +
             'the aircraft coordinates you can figure out the angle (their relative position to the airport). The altitude of the aircraft is '+seaAltitude()+' feet above the sea level ('+groundAltitude()+' feet above ground). ' +
-            'The plane is '+movingSpeed+'. Wind speed is '+wind;
+            'The plane is '+movingSpeed+'. Wind speed is '+wind+'. Air temperature is '+unsafeWindow.geofs.animation.values.airTemp+' degrees celsius.';
 
         context[airport.code].push({content: currentUpdate, role: 'system'});
         context[airport.code].push({content: pilotMsg, role: 'user'});
