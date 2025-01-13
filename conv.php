@@ -4,7 +4,6 @@ $new = [];
 foreach ($json as $ap) {
 	$new[$ap['icao_code']] = [
     'name' => $ap['airport_name'],
-    'controller' => null
   ];
 }
 
