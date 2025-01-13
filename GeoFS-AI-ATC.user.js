@@ -311,7 +311,7 @@
                 };
             }
 
-            let apName = airportMeta ? airportMeta.name + '(' + airport.code + ')' : airport.code;
+            let apName = airportMeta ? airportMeta.name + ' (' + airport.code + ')' : airport.code;
             let season = unsafeWindow.geofs.animation.values.season;
             let daynight = unsafeWindow.geofs.animation.values.night ? 'night' : 'day';
             if (unsafeWindow.geofs.isSnow || unsafeWindow.geofs.isSnowy) {
