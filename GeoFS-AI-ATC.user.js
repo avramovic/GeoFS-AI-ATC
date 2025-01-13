@@ -44,6 +44,8 @@
     });
 
     let tunedInAtc;
+    let controllers = {};
+    let context = {};
 
     const observer = new MutationObserver(() => {
         const menuList = document.querySelector('div.geofs-ui-bottom');
@@ -111,7 +113,7 @@
                         recognition.stop();
                     };
                     recognition.onerror = (event) => {
-                        error('Speech recognition error:' + event.error);
+                        error('Speech recognition error: ' + event.error);
                     };
                 }
             });
@@ -179,10 +181,9 @@
     }
 
     function initController(apCode) {
-        unsafeWindow.geofs.mainAirportList.controllers = unsafeWindow.geofs.mainAirportList.controllers || {};
-        unsafeWindow.geofs.mainAirportList.controllers[apCode] = unsafeWindow.geofs.mainAirportList.controllers[apCode] || null;
+        controllers[apCode] = controllers[apCode] || null;
 
-        if (unsafeWindow.geofs.mainAirportList.controllers[apCode] == null) {
+        if (controllers[apCode] == null) {
             let date = new Date().toISOString().split('T')[0];
             fetch('https://randomuser.me/api/?gender=male&nat=au,br,ca,ch,de,us,dk,fr,gb,in,mx,nl,no,nz,rs,tr,ua,us&seed='+apCode+'-'+date)
               .then(response => {
@@ -192,7 +193,7 @@
                   return response.text();
               }).then(resourceText => {
                 let json = JSON.parse(resourceText)
-                unsafeWindow.geofs.mainAirportList.controllers[apCode] = json.results[0];
+                controllers[apCode] = json.results[0];
             });
         }
     }
@@ -263,9 +264,6 @@
         initController(airport.code);
     }, 500);
 
-    let context = {};
-
-
     function callAtc(pilotMsg) {
         let airport = {
             distanceInKm: findAirportDistance(tunedInAtc),
@@ -273,10 +271,10 @@
         };
 
         let airportMeta = airports[airport.code];
-        let controller = unsafeWindow.geofs.mainAirportList.controllers[airport.code];
+        let controller = controllers[airport.code];
 
         if (typeof controller === 'undefined') {
-            let apName = airportMeta ? airportMeta.name + '(' + airport.code + ')' : airport.code;
+            let apName = airportMeta ? airportMeta.name + ' (' + airport.code + ')' : airport.code;
             radiostatic.play();
             info('Airport '+apName+' seems to be closed right now. Try again later...');
             return;
