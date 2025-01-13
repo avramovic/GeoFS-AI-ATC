@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GeoFS AI (GPT) ATC
 // @namespace    https://avramovic.info/
-// @version      2025-01-13
+// @version      1.0.5
 // @description  AI ATC for GeoFS using free PuterJS GPT API
 // @author       Nemanja Avramovic
 // @license      MIT
@@ -46,6 +46,7 @@
     let tunedInAtc;
     let controllers = {};
     let context = {};
+    let oldNearest = null;
 
     const observer = new MutationObserver(() => {
         const menuList = document.querySelector('div.geofs-ui-bottom');
@@ -248,7 +249,25 @@
         return Math.max(seaAltitude() - unsafeWindow.geofs.animation.values.groundElevationFeet - 50, 0);
     }
 
-    let oldNearest = null;
+    function getPilotInfo(today) {
+        let user = unsafeWindow.geofs.userRecord;
+
+        let pilot = {
+            callsign: 'Foo',
+            name: 'not known',
+            licensed_at: today
+        };
+
+        if (user.id != 0) {
+            pilot = {
+                callsign: user.callsign,
+                name: user.firstname + ' ' + user.lastname,
+                licensed_at: user.created
+            };
+        }
+
+        return pilot;
+    }
 
     // generate controller for the nearest airport for today
     setInterval(function() {
@@ -259,9 +278,8 @@
             let apName = airportMeta ? airportMeta.name+' ('+airport.code+')' : airport.code;
             info('You are now in range of '+apName+'. Set your radio frequency to <b>'+airport.code+'</b> to tune in with them');
             oldNearest = airport.code;
+            initController(airport.code);
         }
-
-        initController(airport.code);
     }, 500);
 
     function callAtc(pilotMsg) {
@@ -270,11 +288,13 @@
             code: tunedInAtc,
         };
 
+        let today = new Date().toISOString().split('T')[0];
         let airportMeta = airports[airport.code];
         let controller = controllers[airport.code];
+        let apName = airportMeta ? airportMeta.name + ' (' + airport.code + ')' : airport.code;
+        let pilot = getPilotInfo(today);
 
         if (typeof controller === 'undefined') {
-            let apName = airportMeta ? airportMeta.name + ' (' + airport.code + ')' : airport.code;
             radiostatic.play();
             info('Airport '+apName+' seems to be closed right now. Try again later...');
             return;
@@ -291,25 +311,7 @@
             lon: unsafeWindow.geofs.mainAirportList[airport.code][1],
         };
 
-        let today = new Date().toISOString().split('T')[0];
-
         if (typeof context[airport.code] === "undefined") {
-            let user = unsafeWindow.geofs.userRecord;
-            let pilot = {
-                callsign: 'Foo',
-                name: 'not known',
-                licensed_at: today
-            };
-
-            if (user.id != 0) {
-                pilot = {
-                    callsign: user.callsign,
-                    name: user.firstname + ' ' + user.lastname,
-                    licensed_at: user.created
-                };
-            }
-
-            let apName = airportMeta ? airportMeta.name + ' (' + airport.code + ')' : airport.code;
             let season = unsafeWindow.geofs.animation.values.season;
             let daynight = unsafeWindow.geofs.animation.values.night ? 'night' : 'day';
             if (unsafeWindow.geofs.isSnow || unsafeWindow.geofs.isSnowy) {
@@ -322,7 +324,6 @@
                 'You will be acting as ground, tower (if the plane is below or at 5000 ft) or approach or departure (if above 5000 ft), depending on whether the plane is on the ground, their distance from the airport, heading and previous context. ' +
                 'If the aircraft is in the air, keep your communication short and concise, as a real ATC. If they\'re on the ground, your replies should still be short (1-2 sentence per reply), but you can ' +
                 'use a more relaxed communication like making jokes, discussing weather, other traffic etc. If asked why so slow on replies, say you\'re busy, like the real ATC. '+
-                'You should address them by their aircraft type/model and callsign, followed by your ICAO (4 character) code and then the message. ' +
                 'Today is '+today+', time is '+time+', a beautiful '+season+' '+daynight;
 
             context[airport.code] = [];
@@ -358,13 +359,28 @@
             movingSpeed = 'flying at '+unsafeWindow.geofs.animation.values.kias+' kts, heading '+unsafeWindow.geofs.animation.values.heading360;
         }
 
+        let address = airplane.name+' '+pilot.callsign+', '+airport.code;
+        if (isOnGround()) {
+            address += ' Ground';
+        } else if (seaAltitude() <= 5000) {
+            address += ' Tower';
+        } else {
+            address += ' Area Control';
+        }
+
         let relativeWindDirection = unsafeWindow.geofs.animation.values.relativeWind;
         let windDirection = unsafeWindow.geofs.animation.values.heading360 + relativeWindDirection;
         let wind = unsafeWindow.geofs.animation.values.windSpeedLabel + ', direction '+ windDirection + ' degrees (or '+relativeWindDirection+' degrees relative to the heading of the aircraft)';
 
         let currentUpdate = 'The pilot is flying '+airplane.name+' and their position is (lat: '+aircraftPosition.lat+', lon: '+aircraftPosition.lon+'), '+onGround+' '+distance+'. Based on the airport and ' +
             'the aircraft coordinates you can figure out their relative position to the airport. The altitude of the aircraft is '+seaAltitude()+' feet above the sea level ('+groundAltitude()+' feet above ground). ' +
-            'The plane is '+movingSpeed+'. Wind speed is '+wind+'. Air temperature is '+unsafeWindow.geofs.animation.values.airTemp+' degrees celsius.';
+            'The plane is '+movingSpeed+'. Wind speed is '+wind+'. Air temperature is '+unsafeWindow.geofs.animation.values.airTemp+' degrees celsius. '+
+            'You should address them with "'+address+'", followed by the message.';
+
+        // remove old currentUpdate, leaving only the last one
+        if (context[airport.code].length >= 4) {
+            context[airport.code].splice(-3, 1);
+        }
 
         context[airport.code].push({content: currentUpdate, role: 'system'});
         context[airport.code].push({content: pilotMsg, role: 'user'});
