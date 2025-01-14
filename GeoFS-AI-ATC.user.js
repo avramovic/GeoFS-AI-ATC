@@ -30,6 +30,10 @@
         growlCSS.href = 'https://cdn.jsdelivr.net/gh/avramovic/geofs-ai-atc@master/vanilla-notify.css';
         growlCSS.rel = 'stylesheet';
         head.appendChild(growlCSS);
+
+        const swal = document.createElement('script');
+        swal.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
+        head.appendChild(swal);
     }
 
     let airports;
@@ -66,19 +70,43 @@
 
             tuneInButton.addEventListener('click', (e) => {
                 let nearestAp = findNearestAirport();
-                let apCode = prompt('Enter airport ICAO code', nearestAp.code);
-                if (apCode == null || apCode === '') {
-                    error('You cancelled the dialog.')
-                } else {
-                    apCode = apCode.toUpperCase();
-                    if (typeof unsafeWindow.geofs.mainAirportList[apCode] === 'undefined') {
-                        error('Airport with code '+ apCode + ' can not be found!');
-                    } else {
+                let wasChatEnabled = false;
+                if (unsafeWindow.geofs.preferences.chat) {
+                    wasChatEnabled = true;
+                    unsafeWindow.geofs.preferences.chat = false;
+                }
+                Swal.fire({
+                    title: "Tune in to ATC",
+                    input: "text",
+                    inputLabel: "Enter airport ICAO code",
+                    inputPlaceholder: "LYBE",
+                    inputAttributes: {
+                        autocomplete: 'off'
+                    },
+                    inputValidator: (value) => {
+                        let apCode = value.trim().toUpperCase();
+                        if (typeof unsafeWindow.geofs.mainAirportList[apCode] === 'undefined') {
+                            return 'Airport with code '+ apCode + ' can not be found!';
+                        }
+                    },
+                    inputValue: nearestAp.code,
+                    showCancelButton: true,
+                    icon: 'question'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        let apCode = result.value.trim().toUpperCase();
                         tunedInAtc = apCode;
                         initController(apCode);
                         info('Your radio is now tuned to '+apCode+' frequency. You will now talk to them.');
                     }
-                }
+                    if (wasChatEnabled) {
+                        unsafeWindow.geofs.preferences.chat = true;
+                        let notifs = document.querySelectorAll('.geofs-closeHaring-button');
+                        for (let i in notifs) {
+                            notifs[i].click();
+                        }
+                    }
+                });
             });
 
             const atcButton = document.createElement('button');
@@ -89,12 +117,38 @@
                 if (typeof tunedInAtc === 'undefined') {
                     error("No frequency set. Click the radio icon to set the frequency!");
                 } else if (e.ctrlKey || e.metaKey) {
-                    let pilotMsg = prompt("Please enter your message to the ATC:");
-                    if (pilotMsg != null && pilotMsg != "") {
-                        callAtc(pilotMsg);
-                    } else {
-                        error("You cancelled the dialog");
+                    let wasChatEnabled = false;
+                    if (unsafeWindow.geofs.preferences.chat) {
+                        wasChatEnabled = true;
+                        unsafeWindow.geofs.preferences.chat = false;
                     }
+                    Swal.fire({
+                        title: "Talk to ATC",
+                        input: "text",
+                        inputLabel: "Enter your message",
+                        inputAttributes: {
+                            autocomplete: 'off'
+                        },
+                        inputValidator: (value) => {
+                            let msg = value.trim();
+                            if (msg === '') {
+                                return 'Message can not be empty!';
+                            }
+                        },
+                        showCancelButton: true,
+                        icon: 'question'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            callAtc(result.value);
+                        }
+                        if (wasChatEnabled) {
+                            unsafeWindow.geofs.preferences.chat = true;
+                            let notifs = document.querySelectorAll('.geofs-closeHaring-button');
+                            for (let i in notifs) {
+                                notifs[i].click();
+                            }
+                        }
+                    });
                 } else {
                     navigator.mediaDevices.getUserMedia({ audio: true });
                     let SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
