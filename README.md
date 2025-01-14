@@ -10,7 +10,7 @@ it aloud using web text to speech API (also supported by all major browsers).
 ## Key features
 - speak to the atc and hear it respond (speech recognition and text-to-speech), or type the message if you can't speak
 (if someone is sleeping 🤣 for example)
-- you have to be within 100 km of the airport to talk to it
+- you have to be within 50 nautical miles of the airport to talk to it
 - click on the radio icon to tune in to different airport; you can tune to a particular airport ATC by using their ICAO code
 - on screen notification will be shown when you are in range of another airport
 - every day there is a new controller working at each airport

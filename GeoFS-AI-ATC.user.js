@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GeoFS AI (GPT) ATC
 // @namespace    https://avramovic.info/
-// @version      1.0.5
+// @version      1.0.6
 // @description  AI ATC for GeoFS using free PuterJS GPT API
 // @author       Nemanja Avramovic
 // @license      MIT
@@ -140,7 +140,7 @@
               Math.sin(dLat / 2) * Math.sin(dLat / 2) +
               Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c; // Distance in kilometers
+        return (R * c) / 1.852; // Distance in nautical miles
     }
 
     function findNearestAirport() {
@@ -154,7 +154,7 @@
                 minDistance = distance;
                 nearestAirport = {
                     code: apCode,
-                    distanceInKm: distance
+                    distance: distance
                 };
             }
         }
@@ -284,15 +284,16 @@
 
     function callAtc(pilotMsg) {
         let airport = {
-            distanceInKm: findAirportDistance(tunedInAtc),
+            distance: findAirportDistance(tunedInAtc),
             code: tunedInAtc,
         };
 
-        let today = new Date().toISOString().split('T')[0];
+        let date = new Date().toISOString().split('T')[0];
+        let time = unsafeWindow.geofs.animation.values.hours + ':' + unsafeWindow.geofs.animation.values.minutes;
         let airportMeta = airports[airport.code];
         let controller = controllers[airport.code];
         let apName = airportMeta ? airportMeta.name + ' (' + airport.code + ')' : airport.code;
-        let pilot = getPilotInfo(today);
+        let pilot = getPilotInfo(date);
 
         if (typeof controller === 'undefined') {
             radiostatic.play();
@@ -300,9 +301,9 @@
             return;
         }
 
-        if (airport.distanceInKm > 100) {
+        if (airport.distance > 50) {
             radiostatic.play();
-            error('Frequency '+airport.code+' is out of range. You need to be at least 54 nautical miles (100 km) away from the airport to contact it.');
+            error('Frequency '+airport.code+' is out of range. You need to be at least 50 nautical miles away from the airport to contact it.');
             return;
         }
 
@@ -317,14 +318,13 @@
             if (unsafeWindow.geofs.isSnow || unsafeWindow.geofs.isSnowy) {
                 daynight = 'snowy '+daynight;
             }
-            let time = unsafeWindow.geofs.animation.values.hours + ':' + unsafeWindow.geofs.animation.values.minutes;
 
             let intro = 'You are '+controller.name.first+' '+controller.name.last+', a '+controller.dob.age+' years old '+controller.gender+' ATC controller on the '+apName+' for today. ' +
                 'Your airport location is (lat: '+airportPosition.lat+', lon: '+airportPosition.lon+'). You are talking to pilot whose name is '+pilot.name+' callsign ('+pilot.callsign+') and they\'ve been piloting since '+pilot.licensed_at+'. ' +
                 'You will be acting as ground, tower (if the plane is below or at 5000 ft) or approach or departure (if above 5000 ft), depending on whether the plane is on the ground, their distance from the airport, heading and previous context. ' +
                 'If the aircraft is in the air, keep your communication short and concise, as a real ATC. If they\'re on the ground, your replies should still be short (1-2 sentence per reply), but you can ' +
                 'use a more relaxed communication like making jokes, discussing weather, other traffic etc. If asked why so slow on replies, say you\'re busy, like the real ATC. '+
-                'Today is '+today+', time is '+time+', a beautiful '+season+' '+daynight;
+                'Today is '+date+', time is '+time+', a beautiful '+season+' '+daynight;
 
             context[airport.code] = [];
             context[airport.code].push({content: intro, role: 'system'});
@@ -340,8 +340,8 @@
         let onGround = isOnGround() ? 'on the ground' : 'in the air';
         let distance;
 
-        if (airport.distanceInKm > 1) {
-            distance = airport.distanceInKm+' km away from the airport';
+        if (airport.distance > 1) {
+            distance = airport.distance+' nautical miles away from the airport';
         } else if (isOnGround()) {
             distance = 'at the airport';
         } else {
@@ -372,7 +372,8 @@
         let windDirection = unsafeWindow.geofs.animation.values.heading360 + relativeWindDirection;
         let wind = unsafeWindow.geofs.animation.values.windSpeedLabel + ', direction '+ windDirection + ' degrees (or '+relativeWindDirection+' degrees relative to the heading of the aircraft)';
 
-        let currentUpdate = 'The pilot is flying '+airplane.name+' and their position is (lat: '+aircraftPosition.lat+', lon: '+aircraftPosition.lon+'), '+onGround+' '+distance+'. Based on the airport and ' +
+        let currentUpdate = 'Date and time: '+date+' '+time+'. '+
+            'The pilot is flying '+airplane.name+' and their position is (lat: '+aircraftPosition.lat+', lon: '+aircraftPosition.lon+'), '+onGround+' '+distance+'. Based on the airport and ' +
             'the aircraft coordinates you can figure out their relative position to the airport. The altitude of the aircraft is '+seaAltitude()+' feet above the sea level ('+groundAltitude()+' feet above ground). ' +
             'The plane is '+movingSpeed+'. Wind speed is '+wind+'. Air temperature is '+unsafeWindow.geofs.animation.values.airTemp+' degrees celsius. '+
             'You should address them with "'+address+'", followed by the message.';
