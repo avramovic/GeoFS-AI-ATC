@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GeoFS AI (GPT) ATC
 // @namespace    https://avramovic.info/
-// @version      1.0.6
+// @version      1.0.7
 // @description  AI ATC for GeoFS using free PuterJS GPT API
 // @author       Nemanja Avramovic
 // @license      MIT
@@ -181,6 +181,44 @@
         );
     }
 
+    function calculateBearing(lat1, lon1, lat2, lon2) {
+        const toRadians = (deg) => deg * (Math.PI / 180);
+        const toDegrees = (rad) => rad * (180 / Math.PI);
+
+        const dLon = toRadians(lon2 - lon1);
+        const y = Math.sin(dLon) * Math.cos(toRadians(lat2));
+        const x = Math.cos(toRadians(lat1)) * Math.sin(toRadians(lat2)) -
+          Math.sin(toRadians(lat1)) * Math.cos(toRadians(lat2)) * Math.cos(dLon);
+        const bearing = toDegrees(Math.atan2(y, x));
+
+        // Normalize to 0-360 degrees
+        return (bearing + 360) % 360;
+    }
+
+    function getRelativeDirection(airportLat, airportLon, airplaneLat, airplaneLon) {
+        // Calculate the bearing from the airport to the airplane
+        const bearing = calculateBearing(airportLat, airportLon, airplaneLat, airplaneLon);
+
+        // Determine the direction based on the bearing
+        if (bearing >= 337.5 || bearing < 22.5) {
+            return "north";
+        } else if (bearing >= 22.5 && bearing < 67.5) {
+            return "northeast";
+        } else if (bearing >= 67.5 && bearing < 112.5) {
+            return "east";
+        } else if (bearing >= 112.5 && bearing < 157.5) {
+            return "southeast";
+        } else if (bearing >= 157.5 && bearing < 202.5) {
+            return "south";
+        } else if (bearing >= 202.5 && bearing < 247.5) {
+            return "southwest";
+        } else if (bearing >= 247.5 && bearing < 292.5) {
+            return "west";
+        } else if (bearing >= 292.5 && bearing < 337.5) {
+            return "northwest";
+        }
+    }
+
     function initController(apCode) {
         controllers[apCode] = controllers[apCode] || null;
 
@@ -341,7 +379,8 @@
         let distance;
 
         if (airport.distance > 1) {
-            distance = airport.distance+' nautical miles away from the airport';
+            let relativeDirection = getRelativeDirection(airportPosition.lat, airportPosition.lon, aircraftPosition.lat, aircraftPosition.lon);
+            distance = airport.distance+' nautical miles '+relativeDirection+' from the airport';
         } else if (isOnGround()) {
             distance = 'at the airport';
         } else {
