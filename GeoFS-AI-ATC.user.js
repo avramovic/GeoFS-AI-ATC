@@ -336,6 +336,7 @@
         if (typeof controller === 'undefined') {
             radiostatic.play();
             info('Airport '+apName+' seems to be closed right now. Try again later...');
+            initController(airport.code);
             return;
         }
 
@@ -408,12 +409,11 @@
         }
 
         let relativeWindDirection = unsafeWindow.geofs.animation.values.relativeWind;
-        let windDirection = unsafeWindow.geofs.animation.values.heading360 + relativeWindDirection;
+        let windDirection = (unsafeWindow.geofs.animation.values.heading360 + relativeWindDirection + 360) % 360;
         let wind = unsafeWindow.geofs.animation.values.windSpeedLabel + ', direction '+ windDirection + ' degrees (or '+relativeWindDirection+' degrees relative to the heading of the aircraft)';
 
         let currentUpdate = 'Date and time: '+date+' '+time+'. '+
-            'The pilot is flying '+airplane.name+' and their position is (lat: '+aircraftPosition.lat+', lon: '+aircraftPosition.lon+'), '+onGround+' '+distance+'. Based on the airport and ' +
-            'the aircraft coordinates you can figure out their relative position to the airport. The altitude of the aircraft is '+seaAltitude()+' feet above the sea level ('+groundAltitude()+' feet above ground). ' +
+            'The pilot is flying '+airplane.name+' and their position is '+onGround+' '+distance+'. The altitude of the aircraft is '+seaAltitude()+' feet above the sea level ('+groundAltitude()+' feet above ground). ' +
             'The plane is '+movingSpeed+'. Wind speed is '+wind+'. Air temperature is '+unsafeWindow.geofs.animation.values.airTemp+' degrees celsius. '+
             'You should address them with "'+address+'", followed by the message.';
 
