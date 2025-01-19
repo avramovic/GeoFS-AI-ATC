@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GeoFS AI (GPT) ATC
 // @namespace    https://avramovic.info/
-// @version      1.0.7
+// @version      1.0.8
 // @description  AI ATC for GeoFS using free PuterJS GPT API
 // @author       Nemanja Avramovic
 // @license      MIT
@@ -399,13 +399,17 @@
             movingSpeed = 'flying at '+unsafeWindow.geofs.animation.values.kias+' kts, heading '+unsafeWindow.geofs.animation.values.heading360;
         }
 
-        let address = airplane.name+' '+pilot.callsign+', '+airport.code;
+        let address = pilot.callsign+', '+airport.code;
         if (isOnGround()) {
             address += ' Ground';
         } else if (seaAltitude() <= 5000) {
             address += ' Tower';
         } else {
             address += ' Area Control';
+        }
+
+        if (airplane.name.toLowerCase().includes('cessna') || airplane.name.toLowerCase().includes('piper')) {
+            address = airplane.name + ' ' + address;
         }
 
         let relativeWindDirection = unsafeWindow.geofs.animation.values.relativeWind;
