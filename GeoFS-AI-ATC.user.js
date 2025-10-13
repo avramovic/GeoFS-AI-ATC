@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GeoFS AI (GPT) ATC
 // @namespace    https://avramovic.info/
-// @version      1.0.8
+// @version      1.0.9
 // @description  AI ATC for GeoFS using free PuterJS GPT API
 // @author       Nemanja Avramovic
 // @license      MIT
@@ -38,7 +38,7 @@
     });
 
     let radiostatic;
-    GM.getResourceText("radiostatic").then((data) => {
+    GM.getResourceUrl("radiostatic").then((data) => {
         radiostatic = new Audio('data:audio/mp3;'+data);
         radiostatic.loop = false;
     });
